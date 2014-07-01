@@ -1,0 +1,22 @@
+Begin PBS Prologue Fri Jun 27 09:25:20 EST 2014 1403825120
+Job ID:              2743891.burnet-srv.idpx.hpsc.csiro.au
+Username:            szu004
+Group:               cci
+Name:                spark_jnitest_env
+Resources:           neednodes=2:ppn=1,nodes=2:ppn=1,vmem=6gb,walltime=00:00:30
+Queue:               normal
+Nodes:               n012
+First Node:          n012
+/var/spool/torque/mom_priv/jobs/2743891.burnet-srv.idpx.hpsc.csiro.au.SC: line 11: /load_spark.sh: No such file or directory
+Begin PBS Epilogue Fri Jun 27 09:25:20 EST 2014 1403825120
+Job ID:              2743891.burnet-srv.idpx.hpsc.csiro.au
+Username:            szu004
+Group:               cci
+Name:                spark_jnitest_env
+Session:             17166
+Resources requested: neednodes=2:ppn=1,nodes=2:ppn=1,vmem=6gb,walltime=00:00:30
+Resources used:      cput=00:00:00,mem=0kb,vmem=0kb,walltime=00:00:00
+Queue:               normal
+Account:             
+Exit code:           1
+End PBS Epilogue Fri Jun 27 09:25:20 EST 2014 1403825120

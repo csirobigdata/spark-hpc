@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>au.csiro.pbdava.spark-hpc</groupId>
+	<artifactId>libtests_jni</artifactId>
+	<packaging>so</packaging>
+	<description>spark-hpc-sample-spark-jni</description>
+	<version>1.0</version>
+	<name>libtests_jni.so</name>
+	<organization>
+		<name>CSIRO-PBDAVA</name>
+	</organization>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>native-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<javahClassNames>
+						<javahClassName>JniTransformer</javahClassName>
+					</javahClassNames>
+					<sources>
+						<source>
+							<directory>src/main/native</directory>
+							<fileNames>
+								<fileName>JniTransformer.c</fileName>
+							</fileNames>
+						</source>
+						<source>
+							<directory>../jni/target/native/javah</directory>
+						</source>
+						<source>
+							<directory>${java.home}/../include</directory>
+						</source>
+                                                <source>
+                                                        <directory>${java.home}/../include/linux</directory>
+                                                </source>
+					</sources>
+					<!--linkerFinalName>libtests_jni</linkerFinalName-->
+					<compilerStartOptions>
+						<compilerStartOption>-fPIC -O</compilerStartOption>
+					</compilerStartOptions>
+					<linkerStartOptions>
+						<linkerStartOption>-shared -lc -ldl</linkerStartOption>
+					</linkerStartOptions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>au.csiro.pbdava.spark-hpc</groupId>
+			<artifactId>tests-jni</artifactId>
+			<version>1.0</version>
+		</dependency>
+	</dependencies>
+</project>
