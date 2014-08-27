@@ -11,7 +11,7 @@ set -e
 . ${SPARKHPC_ROOT}/load_spark.sh
 . ${SPARKHPC_ROOT}/load_sparkhpc.sh
 
-export SPARK_CLASSPATH=${SPARKHPC_ROOT}/examples/core/target/tests-core_2.10-1.0.jar
+export SPARK_CLASSPATH=${SPARKHPC_ROOT}/examples/core/target/tests-core_2.10-1.0.jar:${SPARKHPC_ROOT}/examples/log4j
 spark-hpc.sh --url-env-var WordCountEnv ${SPARKHPC_ROOT}/examples/data/lady_of_shalott.txt
 
 

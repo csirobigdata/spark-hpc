@@ -4,7 +4,12 @@ This package runs SPARK applications on a Linux cluster through a PBS batch
 system. It is based on, and uses the back end of, simr ([Spark in Map
 Reduce](http://databricks.github.io/simr/))
 
-It currently supports Spark 0.9.x and Scala(Java) application runnable with spark-class.
+It currently supports Spark 1.0.x and Scala(Java) application runnable with spark-class.
+
+WARNING: THIS IS A FIRST VERSION TESTED WITH SPARK 1.0.x.
+IT APPEARS TO BE WORKING FOR THE MOST PART BUT IT GENERATES A NUMBER OF DEPRECATION 
+WARNINGS AND SOME FEATURES MAY NOW WORK.
+TREAT IT AS WORK IN PROGRESS.
 
 ## Spark integration
 
@@ -25,7 +30,7 @@ for each Spark application. See [Usage section](#usage) for details on telling
 Spark-HPC requires the following software and environment variables to be setup
 on the system:
 
-* Spark 0.9.1
+* Spark 1.0.x
     - `SPARK_HOME` environment variable must be set to the Spark installation
       directory
     - The `bin` directory of the Spark installation must be added to the `PATH`

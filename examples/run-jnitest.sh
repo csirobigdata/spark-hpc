@@ -19,6 +19,8 @@ APP_CLASSPATH=${SPARKHPC_ROOT}/examples/jni/target/tests-jni-1.0.jar
 
 export SPARK_CLASSPATH=$APP_JAR:$APP_CLASSPATH:$OPENCV_JAR 
 export SPARK_LIBRARY_PATH=${SPARKHPC_ROOT}/examples/jni-native/target
+# SPARK_LIBRARY_PATH no longer works in spark 1.0.x. Need to pass LD_LIBRARY_PATH directly
+export LD_LIBRARY_PATH=$SPARK_LIBRARY_PATH
 export SPARK_JAVA_OPTS="-Dspark.hpc.test=value"
 export SPARK_MEM="2048M"
 export SPARKHPC_DRIVER_MEM="2048M"
