@@ -25,4 +25,3 @@ export SPARKHPC_SCRDIR=${FLUSHDIR}
 # Set classpath required to run driver application
 #export SPARKHPC_DRIVER_CLASSPATH=
 
-

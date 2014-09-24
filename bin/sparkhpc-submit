@@ -12,12 +12,9 @@ QSUB_TEMPLATE='''
 #PBS -l walltime=${walltime}
 #PBS -j oe
 #PBS -o ${output}
-#PBS -v SPARKHPC_ROOT
+#PBS -V
 
 set -e
-
-. ${SPARKHPC_ROOT}/load_spark.sh
-. ${SPARKHPC_ROOT}/load_sparkhpc.sh
 
 export SPARK_CLASSPATH=${spark_classpath} 
 export LD_LIBRARY_PATH=${spark_library_path}
@@ -25,7 +22,7 @@ export SPARK_JAVA_OPTS="${spark_java_opts}"
 export SPARK_MEM="${executor_mem}G"
 export SPARKHPC_DRIVER_MEM="${driver_mem}G"
 
-spark-hpc.sh --url-env-var ${clazz} ${args} 
+$${SPARKHPC_HOME}/spark-hpc.sh --url-env-var ${clazz} ${args} 
 '''
 
 CWD = os.getcwd()
@@ -45,6 +42,7 @@ if __name__ == '__main__':
     misc_options = parser.add_argument_group('misc options' )
     misc_options.add_argument('--dry-run', help="Print out the pbs script but do not run", action='store_true', default=False)
     misc_options.add_argument('-v', '--verbose', help="Print verbose info", action='store_true', default=False)
+    misc_options.add_argument('-l', '--local', help="Do not submit to the cluster - run locally", action='store_true', default=False)
     pbs_group  = parser.add_argument_group('PBS Only', 'Options for PBS')
     pbs_group.add_argument('--num-executors', help="number of nodes (default = 1) ", default="1")
     pbs_group.add_argument('--executor-cores', help="number of cores pre node", default="1")
@@ -64,11 +62,12 @@ if __name__ == '__main__':
         spark_classpath = spark_classpath, walltime = args.walltime, num_executors = args.num_executors,
 	vmem = vmem, driver_mem = args.driver_memory, executor_mem = args.executor_memory, 
 	spark_java_opts = args.driver_java_options.strip(), spark_library_path=spark_library_path, 
-        SPARKHPC_ROOT = os.environ["SPARKHPC_ROOT"], output = output, args = " ".join(args.args))
+        output = output, args = " ".join(args.args))
     if args.dry_run or args.verbose:
     	print(qsub_script)
+    exec_prog = 'qsub' if not args.local else 'bash'
     if not args.dry_run:
-        p = Popen(['qsub','-'],stdin=PIPE,shell=True)
+        p = Popen([exec_prog,'-'],stdin=PIPE,shell=True)
         p.communicate(qsub_script) 	
         p.stdin.close()
         p.wait()

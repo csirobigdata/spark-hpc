@@ -67,8 +67,8 @@ fi
 # appropriate variables
 
 # Load site config
-if [[ -f "${SPARKHPC_HOME}/set-env.sh" ]] ; then
-  source ${SPARKHPC_HOME}/set-env.sh
+if [[ -f "${SPARKHPC_HOME}/conf/set-env.sh" ]] ; then
+  source ${SPARKHPC_HOME}/conf/set-env.sh
 fi
 
 # Save the admin/site version of SPARKHPC_LOCAL_DIR
