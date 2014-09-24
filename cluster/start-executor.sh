@@ -51,15 +51,16 @@ fi
 # TODO: This combines all the cores allocated on this host starst one executor for all cores.
 # the better way would be to optionally allow to start muliple executors with allocated number of cores
 #
-NO_OF_EXECUTORS=1
+NO_OF_EXECUTORS=${CORES_AT_THIS_NODE}
+CORES=1
 #NO_OF_EXECUTORS=$((${CORES_AT_THIS_NODE}/${CORES}))
-echolog ${LOG_TO_FILE} "))))) ${EXECUTOR_TAG}: ${CORES_AT_THIS_NODE} at this node, starting ${NO_OF_EXECUTORS} executors (${CORES} cores  each)"
+echolog ${LOG_TO_FILE} "))))) ${EXECUTOR_TAG}: ${CORES_AT_THIS_NODE} cores at this node, starting ${NO_OF_EXECUTORS} executors (${CORES} cores  each)"
 
 #CORES=${CORES_AT_THIS_NODE}
-for i in {1..1}; do 
+for i in $(seq 1 ${NO_OF_EXECUTORS} ); do 
     EXECUTOR_NAME="executor-${HOSTNAME}-$$-$i"
     echolog ${LOG_TO_FILE} "))))))) Starting executor: ${EXECUTOR_NAME} for: ${DRIVER_URL} with: ${CORES} cores"
     echolog ${LOG_TO_FILE} "))))))) CMD: org.apache.spark.executor.CoarseGrainedExecutorBackend ${DRIVER_URL} ${EXECUTOR_NAME} ${HOSTNAME} ${CORES}"
     ${SPARK_HOME}/bin/spark-class \
-    org.apache.spark.executor.CoarseGrainedExecutorBackend ${DRIVER_URL} ${EXECUTOR_NAME} ${HOSTNAME} ${CORES} 
+    org.apache.spark.executor.CoarseGrainedExecutorBackend ${DRIVER_URL} ${EXECUTOR_NAME} ${HOSTNAME} ${CORES} & 
 done
