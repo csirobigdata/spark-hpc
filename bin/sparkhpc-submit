@@ -30,12 +30,29 @@ CWD = os.getcwd()
 def resolve_paths(l):
     return map(lambda p: os.path.abspath(p),l)
 
+def human2bytes(s):
+    """
+    >>> human2bytes('1M')
+    1048576
+    >>> human2bytes('1G')
+    1073741824
+    """
+    symbols = ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+    letter = s[-1:].strip().upper()
+    num = s[:-1]
+    assert num.isdigit() and letter in symbols
+    num = float(num)
+    prefix = {symbols[0]:1}
+    for i, s in enumerate(symbols[1:]):
+        prefix[s] = 1 << (i+1)*10
+    return int(num * prefix[letter])
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c','--class', help="the main class to run", dest="clazz" )
     parser.add_argument('--jars', help="jars to add to classpath", default="")
-    parser.add_argument('--driver-memory', help="memory per node in GB", default="1")
-    parser.add_argument('--driver-java-options', help="Extra Java options to pass to the driver.", default="")
+    parser.add_argument('--driver-memory', help="memory per node in GB (default=1)", default="1")
+    parser.add_argument('--driver-java-options', help="Extra Java options to pass to the driver vm, e.g: ' -Dfoo=bar -Dxxx-zzz'. Please note the \"'\" and the leading space! ", default="")
     parser.add_argument('--driver-library-path', help="Extra library path entries to pass to the driver.", default="")
     parser.add_argument('--driver-class-path', help="Extra class path entries to pass to the driver.", default="")
     parser.add_argument('--executor-memory', help="memory per node in GB", default="1")
@@ -54,7 +71,8 @@ if __name__ == '__main__':
     if args.verbose:
         print("Parsed arguments: %s" % args)
     jobname = args.clazz.split(".")[-1]
-    vmem = int(args.num_executors) * int(args.executor_memory) + int(args.driver_memory)
+    vmem_in_gb = int(args.num_executors) * int(args.executor_memory) + int(args.driver_memory)
+    vmem = vmem_in_gb 
     spark_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",") + args.driver_class_path.split(":")))
     spark_library_path = ":".join(resolve_paths(args.driver_library_path.split(":")))
     output = os.path.abspath(args.output if args.output is not None else "%s.oe" % jobname)

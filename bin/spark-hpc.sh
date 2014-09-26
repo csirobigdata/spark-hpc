@@ -241,7 +241,10 @@ if [[ "$RUN_SHELL" == "TRUE" ]]; then
   # Code for running spark driver as an interactive
   # shell 
   export MASTER=${SPARKHPC_DRIVER_URL}
-  ${SPARK_HOME}/bin/spark-shell $@
+  export CLASSNAME=org.apache.spark.repl.Main
+  SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}-Spark"
+  export SPARK_JAVA_OPTS
+  ${SPARK_HOME}/bin/spark-class org.apache.spark.repl.Main 
 elif [[ "$DRIVER_URL_VIA_ENV" == "TRUE" ]]; then
   # Code for running spark driver where driver URL
   # is read from environment variable
