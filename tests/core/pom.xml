@@ -43,5 +43,11 @@
 			<version>1.0.2</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>au.csiro.pbdava.spark-hpc</groupId>
+			<artifactId>tests-jni</artifactId>
+			<version>1.0</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 </project>

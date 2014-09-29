@@ -1,5 +1,6 @@
 #!/bin/bash
 
-mvn package
+(cd core ; mvn package)
+mkdir -p ../lib
 cp core/target/*.jar ../lib
-mvn clean
+(cd core; mvn clean)

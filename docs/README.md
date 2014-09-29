@@ -11,6 +11,12 @@ IT APPEARS TO BE WORKING FOR THE MOST PART BUT IT GENERATES A NUMBER OF DEPRECAT
 WARNINGS AND SOME FEATURES MAY NOW WORK.
 TREAT IT AS WORK IN PROGRESS.
 
+There are two ways to use spark-hpc
+
+1. Submit spark jobs with sparkhpc-submit which mimics to large extend the spark-sumit command.
+2. Use spark-hpc.sh direclty in PBS submission scrips. 
+
+
 ## Spark integration
 
 Spark applications run via `spark-hpc.sh` need to construct a spark context and
