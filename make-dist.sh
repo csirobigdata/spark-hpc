@@ -18,5 +18,10 @@ cp -r conf ${STAGEDIR}
 cp LICENSE ${STAGEDIR}
 cp docs/README.md ${STAGEDIR}
 
+#compile the examples
+(cd examples/src && ./make_dist.sh)
+
+cp -r examples/ ${STAGEDIR}
+
 tar -czf target/${DISTNAME}.tar.gz -C target ${DISTNAME}
 
