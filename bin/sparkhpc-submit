@@ -23,7 +23,7 @@ export SPARK_JAVA_OPTS="${spark_java_opts}"
 export SPARKHPC_EXECUTOR_MEM="${executor_mem}G"
 export SPARKHPC_DRIVER_MEM="${driver_mem}G"
 
-$${SPARKHPC_HOME}/bin/spark-hpc.sh --verbose --url-env-var ${clazz} ${args} 
+$${SPARKHPC_HOME}/bin/spark-hpc.sh --verbose ${clazz} ${args} 
 '''
 
 CWD = os.getcwd()

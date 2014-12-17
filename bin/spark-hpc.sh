@@ -83,7 +83,7 @@ fi
 ################################################
 # Command line parsing
 
-OPTS=`getopt -o "+shv" -l "shell,url-env-var,help,verbose,spark-hpc-log:,log4j-configuration:,force-local-dir" -- "$@"`
+OPTS=`getopt -o "+shv" -l "shell,help,verbose,spark-hpc-log:,log4j-configuration:,force-local-dir" -- "$@"`
 if [ $? -ne 0 ]; then
   echoerr "$USAGE"
   exit 1
@@ -93,9 +93,6 @@ while true; do
   case "$1" in
     -s|--shell)
       RUN_SHELL='TRUE'
-      shift;;
-    --url-env-var)
-      DRIVER_URL_VIA_ENV='TRUE'
       shift;;
     -h|--help)
       echoerr "$USAGE"
@@ -240,25 +237,16 @@ if [[ -n "${SPARKHPC_DRIVER_MEM}" ]]; then
   export SPARK_DRIVER_MEMORY="${SPARKHPC_DRIVER_MEM}"
 fi
 
+export SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
+
 if [[ "$RUN_SHELL" == "TRUE" ]]; then
   # Code for running spark driver as an interactive
   # shell 
-  export MASTER=${SPARKHPC_DRIVER_URL}
-  export CLASSNAME=org.apache.spark.repl.Main
-  SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}-Spark"
-  export SPARK_JAVA_OPTS
   ${SPARK_HOME}/bin/spark-class org.apache.spark.repl.Main 
-elif [[ "$DRIVER_URL_VIA_ENV" == "TRUE" ]]; then
+else 
   # Code for running spark driver where driver URL
   # is read from environment variable
-  export MASTER=${SPARKHPC_DRIVER_URL}
-  SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}-Spark"
-  export SPARK_JAVA_OPTS
   ${SPARK_HOME}/bin/spark-class $@
-else
-  CLASSNAME=$1
-  shift
-  ${SPARK_HOME}/bin/spark-class $CLASSNAME $SPARKHPC_DRIVER_URL $@
 fi
 
 rm -rf ${SPARKHPC_RUNDIR}
