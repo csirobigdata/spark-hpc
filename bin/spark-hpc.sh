@@ -187,7 +187,7 @@ if [[ -f "$LOG4J_CONF" ]]; then
     fi
     SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dlog4j.configuration=file://${LOG4J_CONF}"
 fi
-export SPARK_JAVA_OPTS
+#export SPARK_JAVA_OPTS
 
 
 #JAVA mem
@@ -228,8 +228,9 @@ mpirun --pernode ${SPARKHPC_HOME}/cluster/start-executor.sh &
 export SPARK_SUBMIT_CLASSPATH=$SPARKHPC_DRIVER_CLASSPATH
 
 echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_CLASSPATH: ${SPARKHPC_DRIVER_CLASSPATH}"
 echolog ${LOG_TO_FILE} ">>  PWD: ${PWD}"
+echolog ${LOG_TO_FILE} ">>  SPARK_JAVA_OPTS: ${SPARK_JAVA_OPTS}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_CLASSPATH: ${SPARKHPC_DRIVER_CLASSPATH}"
 
 
 # Launching Driver
@@ -237,7 +238,7 @@ if [[ -n "${SPARKHPC_DRIVER_MEM}" ]]; then
   export SPARK_DRIVER_MEMORY="${SPARKHPC_DRIVER_MEM}"
 fi
 
-export SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
+export SPARK_DRIVER_OPTS="${SPARKHPC_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
 
 if [[ "$RUN_SHELL" == "TRUE" ]]; then
   # Code for running spark driver as an interactive
