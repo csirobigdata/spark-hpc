@@ -9,7 +9,7 @@ echo
 EXECUTOR_TAG="${HOSTNAME}:$$"
 
 echolog ${LOG_TO_FILE} "TMPDIR: ${TMPDIR}"
-echolog ${LOG_TO_FILE} "SPARKCLASSPATH: $SPARK_CLASSPATH"
+echolog ${LOG_TO_FILE} "SPARKHPC_EXECUTOR_CLASSPATH: $SPARKHPC_EXECUTOR_CLASSPATH"
 echolog ${LOG_TO_FILE} "SPARKHPC_COMMFILE: ${SPARKHPC_COMM_FILE}"
 echolog ${LOG_TO_FILE} "SPARK_HOME ${SPARK_HOME}"
 echolog ${LOG_TO_FILE} "))))))))))))))))))))))))))))))))))))))))))"
@@ -30,10 +30,11 @@ if  [[ ! -f "${SPARKHPC_COMM_FILE}" ]] ; then
     exit 1
 fi
 
+export SPARK_CLASSPATH=$SPARKHPC_EXECUTOR_CLASSPATH
 
 #Setting up jvm heap size 
 if [[ -n "${SPARKHPC_EXECUTOR_MEM}" ]]; then
-  export SPARK_MEM="${SPARKHPC_EXECUTOR_MEM}"
+  export SPARK_EXECUTOR_MEMORY="${SPARKHPC_EXECUTOR_MEM}"
 fi
 
 TMPVAR=`strings ${SPARKHPC_COMM_FILE} | head -n1`

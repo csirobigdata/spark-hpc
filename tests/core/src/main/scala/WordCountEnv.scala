@@ -19,5 +19,6 @@ object WordCountEnv {
         	val result =  output.toArray()
         	println("Result: " + result.toList)
         }
+        sc.stop()
     } 
 } 

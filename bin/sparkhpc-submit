@@ -16,19 +16,20 @@ QSUB_TEMPLATE='''
 
 set -e
 
-export SPARK_CLASSPATH=${spark_classpath} 
+export SPARKHPC_DRIVER_CLASSPATH=${driver_classpath} 
+export SPARKHPC_EXECUTOR_CLASSPATH=${executor_classpath}
 export LD_LIBRARY_PATH=${spark_library_path}
 export SPARK_JAVA_OPTS="${spark_java_opts}"
-export SPARK_MEM="${executor_mem}G"
+export SPARKHPC_EXECUTOR_MEM="${executor_mem}G"
 export SPARKHPC_DRIVER_MEM="${driver_mem}G"
 
-$${SPARKHPC_HOME}/bin/spark-hpc.sh --url-env-var ${clazz} ${args} 
+$${SPARKHPC_HOME}/bin/spark-hpc.sh --verbose --url-env-var ${clazz} ${args} 
 '''
 
 CWD = os.getcwd()
 
 def resolve_paths(l):
-    return map(lambda p: os.path.abspath(p),l)
+    return map(lambda p: os.path.abspath(p),filter(lambda p:len(p) >0,l))
 
 def human2bytes(s):
     """
@@ -47,6 +48,12 @@ def human2bytes(s):
         prefix[s] = 1 << (i+1)*10
     return int(num * prefix[letter])
 
+def validate_conf(conf):
+    non_spark_conf = filter(lambda x:not x.startswith("spark."), conf)
+    if len(non_spark_conf) > 0 :
+        print("Invalid spark options: %s" % non_spark_conf)
+        sys.exit(1)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c','--class', help="the main class to run", dest="clazz" )
@@ -56,6 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--driver-library-path', help="Extra library path entries to pass to the driver.", default="")
     parser.add_argument('--driver-class-path', help="Extra class path entries to pass to the driver.", default="")
     parser.add_argument('--executor-memory', help="memory per node in GB", default="1")
+    parser.add_argument('--conf', help="sparkConfigOptions", default=[], action='append') 
     misc_options = parser.add_argument_group('misc options' )
     misc_options.add_argument('--dry-run', help="Print out the pbs script but do not run", action='store_true', default=False)
     misc_options.add_argument('-v', '--verbose', help="Print verbose info", action='store_true', default=False)
@@ -70,14 +78,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.verbose:
         print("Parsed arguments: %s" % args)
+
+    validate_conf(args.conf) 
     jobname = args.clazz.split(".")[-1]
     vmem_in_gb = int(args.num_executors) * int(args.executor_memory) + int(args.driver_memory)
     vmem = vmem_in_gb 
-    spark_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",") + args.driver_class_path.split(":")))
+    driver_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",") + args.driver_class_path.split(":")))
+    executor_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",")))
     spark_library_path = ":".join(resolve_paths(args.driver_library_path.split(":")))
     output = os.path.abspath(args.output if args.output is not None else "%s.oe" % jobname)
     qsub_script = Template(QSUB_TEMPLATE).substitute(name=jobname, clazz=args.clazz, appjar=args.appJar,
-        spark_classpath = spark_classpath, walltime = args.walltime, num_executors = args.num_executors,
+        driver_classpath = driver_classpath, executor_classpath = executor_classpath,  walltime = args.walltime, num_executors = args.num_executors,
 	vmem = vmem, driver_mem = args.driver_memory, executor_mem = args.executor_memory, 
 	spark_java_opts = args.driver_java_options.strip(), spark_library_path=spark_library_path, 
         output = output, args = " ".join(args.args))

@@ -217,17 +217,18 @@ session, presenting you with a Scala prompt and pre loaded Spark context.
 `spark-hpc.sh --shell` can be configured in the same way as the batch mode version.
 See the [Configuration](#config) section for more information.
 
-### <a name="callconv"></a> Driver Calling Convention
+### <a name="callconv"></a> Develpment consideration 
 
-By default `spark-hpc.sh` passes the driver URL to `<class-name>` via its first
-commandline argument, with `<args>` starting from the *second* argument. Use
-the `--url-env-var` option to alternatively pass the driver URL to
-`<class-name>` via environment variable `MASTER`, with `<args>` starting at the
-*first* commandline argument.
+By `spark-hpc.sh` passes the driver URL to `<class-name>` 
+in the spark.master property of SparkConf, just spark-submit does.
 
-Interactive mode *always* passes the driver URL via environment variable.
-i.e. `spark-hpc.sh --shell` is a synonym for `spark-hpc.sh --shell
---url-env-var`.
+In order to avoid driver disassociation errors in the log and ensure clean 
+termination of your application use `SparkContext.stop()` method to explicitely stop 
+the the driver e.g.:
+
+	val sc = new SparkContext(new SparkConf())
+	// here goes your code
+	sc.stop()  // finish working with the context	
 
 ## Examples
 

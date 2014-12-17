@@ -227,14 +227,17 @@ echolog ${LOG_TO_FILE} "Starting executors"
 
 mpirun --pernode ${SPARKHPC_HOME}/cluster/start-executor.sh &
 
+####################################################
+export SPARK_SUBMIT_CLASSPATH=$SPARKHPC_DRIVER_CLASSPATH
+
 echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-echolog ${LOG_TO_FILE} ">>  SPARK_CLASSPATH: ${SPARK_CLASSPATH}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_CLASSPATH: ${SPARKHPC_DRIVER_CLASSPATH}"
 echolog ${LOG_TO_FILE} ">>  PWD: ${PWD}"
 
-####################################################
+
 # Launching Driver
 if [[ -n "${SPARKHPC_DRIVER_MEM}" ]]; then
-  export SPARK_MEM="${SPARKHPC_DRIVER_MEM}"
+  export SPARK_DRIVER_MEMORY="${SPARKHPC_DRIVER_MEM}"
 fi
 
 if [[ "$RUN_SHELL" == "TRUE" ]]; then
