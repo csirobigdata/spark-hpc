@@ -176,7 +176,7 @@ echolog ${LOG_TO_FILE} "Starting executors"
 mpirun --pernode ${SPARKHPC_HOME}/cluster/start-executor.sh &
 
 ####################################################
-export SPARK_SUBMIT_CLASSPATH="$SPARK_JAVA_CLASSPATH:$SPARKHPC_DRIVER_CLASSPATH"
+export SPARK_SUBMIT_CLASSPATH="${SPARKHPC_JAVA_CLASSPATH}:${SPARKHPC_DRIVER_CLASSPATH}"
 
 # Launching Driver
 if [[ -n "${SPARKHPC_DRIVER_MEM}" ]]; then

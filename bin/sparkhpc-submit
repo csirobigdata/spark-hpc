@@ -16,6 +16,7 @@ QSUB_TEMPLATE='''
 
 set -e
 
+export SPARKHPC_JAVA_CLASSPATH=${spark_classpath}
 export SPARKHPC_DRIVER_CLASSPATH=${driver_classpath} 
 export SPARKHPC_EXECUTOR_CLASSPATH=${executor_classpath}
 export LD_LIBRARY_PATH=${spark_library_path}
@@ -92,14 +93,16 @@ if __name__ == '__main__':
     jobname = args.clazz.split(".")[-1]
     vmem_in_gb = int(args.num_executors) * int(args.executor_memory) + int(args.driver_memory)
     vmem = vmem_in_gb 
-    driver_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",") + args.driver_class_path.split(":")))
-    executor_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",")))
+    spark_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",")))
+    driver_classpath = ":".join(args.driver_class_path.split(":"))
+    executor_classpath = ""
     spark_library_path = ":".join(resolve_paths(args.driver_library_path.split(":")))
     output = os.path.abspath(args.output if args.output is not None else "%s.oe" % jobname)
     qsub_script = Template(QSUB_TEMPLATE).substitute(name=jobname, clazz=args.clazz, appjar=args.appJar,
         driver_classpath = driver_classpath, executor_classpath = executor_classpath,  walltime = args.walltime, num_executors = args.num_executors,
 	vmem = vmem, driver_mem = args.driver_memory, executor_mem = args.executor_memory, 
 	spark_java_opts = spark_java_opts, spark_library_path=spark_library_path, 
+        spark_classpath = spark_classpath,
         output = output, args = " ".join(args.args))
     if args.dry_run or args.verbose:
     	print(qsub_script)
