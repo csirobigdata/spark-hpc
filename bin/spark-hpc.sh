@@ -37,11 +37,6 @@ if [[ -z "$SPARK_HOME" ]]; then
     exit 1
 fi
 
-
-#TODO: This assumes CSIRO modules convesion when the basename is actually the version
-SPARK_VERSION=$(basename $SPARK_HOME)
-
-
 ############################################
 # Check required env var SPARKHPC_HOME
 
@@ -53,7 +48,6 @@ if [[ ! -d "$SPARKHPC_HOME" ]]; then
     echoerr "ERROR: Cannot find directory \"${SPARKHPC_HOME}\" defined in environment variable SPARKHPC_HOME"
     exit 1;
 fi
-
 
 ############################################
 # Load config files and modules to set the
@@ -120,6 +114,19 @@ if [[ "$RUN_SHELL" != "TRUE" && -z "$1" ]]; then
     exit 1
 fi
 
+#TODO: This assumes CSIRO modules convesion when the basename is actually the version
+SPARKHPC_SPARK_VERSION=$(basename $SPARK_HOME)
+
+echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echolog ${LOG_TO_FILE} ">>  PWD: ${PWD}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_SPARK_VERSION: ${SPARKHPC_SPARK_VERSION}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_JAVA_OPTS: ${SPARKHPC_JAVA_OPTS}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_OPTS: ${SPARKHPC_DRIVER_OPTS}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_EXECUTOR_OPTS: ${SPARKHPC_EXECUTOR_OPTS}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_JAVA_CLASSPATH: ${SPARKHPC_JAVA_CLASSPATH}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_CLASSPATH: ${SPARKHPC_DRIVER_CLASSPATH}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_EXECUTOR_CLASSPATH: ${SPARKHPC_EXECUTOR_CLASSPATH}"
+
 ######################################################
 # Start preparing SPARK-HPC working files and env vars
 
@@ -163,33 +170,34 @@ SPARKHPC_DRIVER_URL="simr://${SPARKHPC_COMM_FILE}"
 # Start launching Executors
 
 echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-
 echolog ${LOG_TO_FILE} "DRIVER_URL: ${SPARKHPC_DRIVER_URL}"
-
 echolog ${LOG_TO_FILE} "Starting executors"
 
 mpirun --pernode ${SPARKHPC_HOME}/cluster/start-executor.sh &
 
 ####################################################
-export SPARK_SUBMIT_CLASSPATH=$SPARKHPC_DRIVER_CLASSPATH
-
-echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-echolog ${LOG_TO_FILE} ">>  PWD: ${PWD}"
-echolog ${LOG_TO_FILE} ">>  SPARK_JAVA_OPTS: ${SPARK_JAVA_OPTS}"
-echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_CLASSPATH: ${SPARKHPC_DRIVER_CLASSPATH}"
-
+export SPARK_SUBMIT_CLASSPATH="$SPARK_JAVA_CLASSPATH:$SPARKHPC_DRIVER_CLASSPATH"
 
 # Launching Driver
 if [[ -n "${SPARKHPC_DRIVER_MEM}" ]]; then
   export SPARK_DRIVER_MEMORY="${SPARKHPC_DRIVER_MEM}"
 fi
 
-export SPARK_DRIVER_OPTS="${SPARKHPC_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
+# The values of spark.master and spark.app.name will be overriden if present
+# TODO: Add a warning about it
+export SPARK_DRIVER_OPTS="${SPARKHPC_JAVA_OPTS} ${SPARKHPC_DRIVER_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
 
 # Workaround: IN 1.0.x even though the warning suggests SPARK_LOCAL_DIRS takes precedence only spark.local.dir is actually used
-if [[ $SPARK_VERSION =~ ^1\.0\. ]]; then
+if [[ $SPARKHPC_SPARK_VERSION =~ ^1\.0\. ]]; then
   export SPARK_DRIVER_OPTS="$SPARK_DRIVER_OPTS -Dspark.local.dir=${SPARK_LOCAL_DIRS}"
 fi
+
+echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echolog ${LOG_TO_FILE} ">>  SPARK_HOME: ${SPARK_HOME}"
+echolog ${LOG_TO_FILE} ">>  SPARK_SUBMIT_CLASSPATH = ${SPARK_SUBMIT_CLASSPATH}"
+echolog ${LOG_TO_FILE} ">>  SPARK_DRIVER_OPTS: ${SPARK_DRIVER_OPTS}"
+echolog ${LOG_TO_FILE} ">>  SPARK_LOCAL_DIRS: ${SPARK_LOCAL_DIRS}"
+echolog ${LOG_TO_FILE} ">>  SPARK_DRIVER_MEMORY: ${SPARK_DRIVER_MEMORY}"
 
 if [[ "$RUN_SHELL" == "TRUE" ]]; then
   # Code for running spark driver as an interactive
