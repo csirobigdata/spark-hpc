@@ -19,10 +19,6 @@ options:
                     are arguments passed directly through to spark-shell
                     (see spark-shell usage information for valid arguements)
 
-    --url-env-var   Pass driver url to application via MASTER environment
-                    variable instead of first commandline argument (default
-                    for --shell)
-
     -h|--help       This help message
 
     -v|--verbose    Turn on spark-hpc logging output to stderr
@@ -30,13 +26,6 @@ options:
     --spark-hpc-log=file
                     Redirect spark-hpc logging to "file" (implies -v)
 
-    Spark Properties
-
-    --force-local-dir
-                    Forces user overwrite of spark.local.dir java system
-                    property set via SPARKHPC_LOCAL_DIR environment variable or
-                    by adding "-Dspark.local.dir=value" in SPARK_JAVA_OPTS or
-                    SPARK_EXECUTOR_OPTS.
 EOF
 
 
@@ -47,6 +36,10 @@ if [[ -z "$SPARK_HOME" ]]; then
     echoerr "ERROR: Required environment variable SPARK_HOME is not defined"
     exit 1
 fi
+
+
+#TODO: This assumes CSIRO modules convesion when the basename is actually the version
+SPARK_VERSION=$(basename $SPARK_HOME)
 
 
 ############################################
@@ -106,9 +99,6 @@ while true; do
     --log4j-configuration)
       LOG4J_CONF="${2}"
       shift 2;;
-    --force-local-dir)
-      FORCE_LOCAL_DIR='TRUE'
-      shift;;
     --)
       shift
       break;;
@@ -130,53 +120,11 @@ if [[ "$RUN_SHELL" != "TRUE" && -z "$1" ]]; then
     exit 1
 fi
 
-# Check whether user set spark.local.dir in SPARK_JAVA_OPTS or SPARK_EXECUTOR_OPTS
-# NOTE: we only check these two env vars, as spark-hpc does not YET invoke paths
-#       through spark-class that utilise other options
-# 1) First see if any -Dspark.local.dir is gobbled by matching "s
-LOCAL_DIR_IN_JAVA_OPTS=$(echo "${SPARK_JAVA_OPTS} ${SPARK_EXECUTOR_OPTS}" | sed 's/"[^"]*"/""/g' | grep '\-Dspark\.local\.dir')
-if [[ -n "$LOCAL_DIR_IN_JAVA_OPTS" ]]; then
-    # 2) if not get the full -Dspark.local.dir=value string
-    LOCAL_DIR_IN_JAVA_OPTS=$(echo "${SPARK_JAVA_OPTS} ${SPARK_EXECUTOR_OPTS}" | sed -n 's/.*\(-Dspark\.local\.dir=\)\("[^"]*"\|[^"][^" ]*\).*/\1\2/gp')
-fi
-
-
-# If the user has not confirmed overwrite of spark.local.dir with
-# --force-local-dir, then run check for the attempt and warn them
-if [[ -z "$FORCE_LOCAL_DIR" ]]; then
-
-    # If the user has set a value for SPARKHPC_LOCAL_DIR or
-    # spark.local.dir anywhere, warn them of ramifications
-    if [[ -n "$LOCAL_DIR_IN_JAVA_OPTS" || "$SITE_SPARKHPC_LOCAL_DIR" != "$SPARKHPC_LOCAL_DIR" ]]; then
-        if [[ -n "$LOCAL_DIR_IN_JAVA_OPTS" ]]; then
-            SPECIFIED_WHERE="SPARK_JAVA_OPTS or SPARK_EXECUTOR_OPTS"
-            SPECIFIED_AS=$LOCAL_DIR_IN_JAVA_OPTS
-        fi
-        SPECIFIED_WHERE=${SPECIFIED_WHERE:-SPARKHPC_LOCAL_DIR}
-        SPECIFIED_AS=${SPECIFIED_AS:-$SPARKHPC_LOCAL_DIR}
-
-        echoerr "ERROR: User has overwritten spark.local.dir site default to ${SPECIFIED_AS} in ${SPECIFIED_WHERE}"
-        echoerr "       Site policies or conventions could be in place for jobs' usage of  node local storage on cluster."
-        echoerr "       Misuse of node local storage can adversely effect nodes."
-        echoerr ""
-        echoerr "       Use the spark-hpc.sh --force-local-dir option to force user overwrite of spark.local.dir value"
-
-        exit 1
-
-    fi
-fi
-
 ######################################################
 # Start preparing SPARK-HPC working files and env vars
 
-# If -Dspark.local.dir is not already defined in
-# SPARK_JAVA_OPTS or SPARK_EXECUTOR_OPTS then add it
-if [[ ! -n "$LOCAL_DIR_IN_JAVA_OPTS" ]]; then
-    # Set the path of spark.local.dir to that defined by
-    # SPARKHPC_LOCAL_DIR, otherwise default to ${LOCALDIR}
-    SPARKHPC_LOCAL_DIR=${SPARKHPC_LOCAL_DIR:-$LOCALDIR}
-    SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dspark.local.dir=${SPARKHPC_LOCAL_DIR}"
-fi
+# Configure SPARK local dir 
+export SPARK_LOCAL_DIRS=${SPARKHPC_LOCAL_DIR:-$LOCALDIR}
 
 # If a log4j config file was specified and exists
 if [[ -f "$LOG4J_CONF" ]]; then
@@ -187,8 +135,6 @@ if [[ -f "$LOG4J_CONF" ]]; then
     fi
     SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dlog4j.configuration=file://${LOG4J_CONF}"
 fi
-#export SPARK_JAVA_OPTS
-
 
 #JAVA mem
 export SPARKHPC_DRIVER_MEM=${SPARKHPC_DRIVER_MEM:-$SPARK_MEM}
@@ -239,6 +185,11 @@ if [[ -n "${SPARKHPC_DRIVER_MEM}" ]]; then
 fi
 
 export SPARK_DRIVER_OPTS="${SPARKHPC_JAVA_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
+
+# Workaround: IN 1.0.x even though the warning suggests SPARK_LOCAL_DIRS takes precedence only spark.local.dir is actually used
+if [[ $SPARK_VERSION =~ ^1\.0\. ]]; then
+  export SPARK_DRIVER_OPTS="$SPARK_DRIVER_OPTS -Dspark.local.dir=${SPARK_LOCAL_DIRS}"
+fi
 
 if [[ "$RUN_SHELL" == "TRUE" ]]; then
   # Code for running spark driver as an interactive

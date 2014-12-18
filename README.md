@@ -92,12 +92,6 @@ In addition `spark-hpc.sh` can be configured using the following environment var
 * `SPARKHPC_DRIVER_MEM` - the java heap space for the driver (defaults to $SPARK_MEM)
 * `SPARKHPC_EXECUTOR_MEM` - the max java heap space for the executor (defaults to $SPARK_MEM)
 
-The following special handling rules apply:
-
-* `spark.local.dir` is checked and handled with respect to admin set site conventions
-* `SPARKHPC_LOCAL_DIR` is synonymous with, and overwritten by, `-Dspark.local.dir`
-
-
 ### <a name="site_conf"></a> Site Wide Runtime Config
 
 Site wide runtime configuration options can be set by system administrators in
