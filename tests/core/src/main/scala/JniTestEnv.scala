@@ -1,6 +1,6 @@
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
-
+import org.apache.spark.SparkConf
 
 /**
  * A bit dumb example but
@@ -46,10 +46,9 @@ object JniTestEnv {
     new Tests("driver")
     lazy val testsInExecutor = new Tests("executor")
     // get MASTER from a variable
-    val driverUrl = if (System.getenv("MASTER") != null) System.getenv("MASTER") else "local"
 
     val inputPath = args(0)
-    val sc = new SparkContext(driverUrl, "JniTest")
+    val sc = new SparkContext(new SparkConf())
     val lines = sc.textFile(inputPath)
 
     val transforms = lines.map { l =>
@@ -57,5 +56,6 @@ object JniTestEnv {
       new JniTransformer().transform(l)
     }
     transforms.toArray().foreach(println(_))
+    sc.stop()
   }
 } 

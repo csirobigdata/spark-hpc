@@ -20,7 +20,8 @@ export SPARKHPC_JAVA_CLASSPATH=${spark_classpath}
 export SPARKHPC_DRIVER_CLASSPATH=${driver_classpath} 
 export SPARKHPC_EXECUTOR_CLASSPATH=${executor_classpath}
 export LD_LIBRARY_PATH=${spark_library_path}
-export SPARKHPC_JAVA_OPTS=${spark_java_opts}
+export SPARKHPC_JAVA_OPTS="${spark_java_opts}"
+export SPARKHPC_DRIVER_OPTS="${driver_java_opts}"
 export SPARKHPC_EXECUTOR_MEM="${executor_mem}G"
 export SPARKHPC_DRIVER_MEM="${driver_mem}G"
 
@@ -88,13 +89,14 @@ if __name__ == '__main__':
 
     validate_conf(args.conf) 
     print(conf_to_options(args.conf))
-    spark_java_opts = (conf_to_options(args.conf) + " " + args.driver_java_options.strip())
+    spark_java_opts = conf_to_options(args.conf) 
+    driver_java_opts = args.driver_java_options.strip()
 
     jobname = args.clazz.split(".")[-1]
     vmem_in_gb = int(args.num_executors) * int(args.executor_memory) + int(args.driver_memory)
     vmem = vmem_in_gb 
     spark_classpath = ":".join(resolve_paths([args.appJar] + args.jars.split(",")))
-    driver_classpath = ":".join(args.driver_class_path.split(":"))
+    driver_classpath = ":".join(resolve_paths(args.driver_class_path.split(":")))
     executor_classpath = ""
     spark_library_path = ":".join(resolve_paths(args.driver_library_path.split(":")))
     output = os.path.abspath(args.output if args.output is not None else "%s.oe" % jobname)
@@ -103,6 +105,7 @@ if __name__ == '__main__':
 	vmem = vmem, driver_mem = args.driver_memory, executor_mem = args.executor_memory, 
 	spark_java_opts = spark_java_opts, spark_library_path=spark_library_path, 
         spark_classpath = spark_classpath,
+        driver_java_opts = driver_java_opts,
         output = output, args = " ".join(args.args))
     if args.dry_run or args.verbose:
     	print(qsub_script)
