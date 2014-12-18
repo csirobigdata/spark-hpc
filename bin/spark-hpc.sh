@@ -126,12 +126,11 @@ echolog ${LOG_TO_FILE} ">>  SPARKHPC_EXECUTOR_OPTS: ${SPARKHPC_EXECUTOR_OPTS}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_JAVA_CLASSPATH: ${SPARKHPC_JAVA_CLASSPATH}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_CLASSPATH: ${SPARKHPC_DRIVER_CLASSPATH}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_EXECUTOR_CLASSPATH: ${SPARKHPC_EXECUTOR_CLASSPATH}"
-
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_JAVA_LIBRARY_PATH: ${SPARKHPC_JAVA_LIBRARY_PATH}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_LIBRARY_PATH: ${SPARKHPC_DRIVER_LIBRARY_PATH}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_EXECUTOR_LIBRARY_PATH: ${SPARKHPC_EXECUTOR_LIBRARY_PATH}"
 ######################################################
 # Start preparing SPARK-HPC working files and env vars
-
-# Configure SPARK local dir 
-export SPARK_LOCAL_DIRS=${SPARKHPC_LOCAL_DIR:-$LOCALDIR}
 
 # If a log4j config file was specified and exists
 if [[ -f "$LOG4J_CONF" ]]; then
@@ -166,6 +165,19 @@ fi
 export SPARKHPC_COMM_FILE=${SPARKHPC_RUNDIR}/commfile
 SPARKHPC_DRIVER_URL="simr://${SPARKHPC_COMM_FILE}"
 
+
+#Setup shared env for driver and executor
+# Configure SPARK local dir 
+export SPARK_LOCAL_DIRS=${SPARKHPC_LOCAL_DIR:-$LOCALDIR}
+
+export SPARKHPC_OVERRIDE_OPTS="-Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
+
+# Workaround: IN 1.0.x even though the warning suggests SPARK_LOCAL_DIRS takes precedence only spark.local.dir is actually used
+if [[ $SPARKHPC_SPARK_VERSION =~ ^1\.0\. ]]; then
+  export SPARKHPC_OVERRIDE_OPTS="${SPARKHPC_OVERRIDE_OPTS} -Dspark.local.dir=${SPARK_LOCAL_DIRS}"
+fi
+
+
 ####################################################
 # Start launching Executors
 
@@ -185,19 +197,16 @@ fi
 
 # The values of spark.master and spark.app.name will be overriden if present
 # TODO: Add a warning about it
-export SPARK_DRIVER_OPTS="${SPARKHPC_JAVA_OPTS} ${SPARKHPC_DRIVER_OPTS} -Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
+export SPARK_DRIVER_OPTS="${SPARKHPC_JAVA_OPTS} ${SPARKHPC_DRIVER_OPTS} ${SPARKHPC_OVERRIDE_OPTS}"
+export LD_LIBRARY_PATH="${SPARKHPC_DRIVER_LIBRARY_PATH}:${SPARKHPC_JAVA_LIBRARY_PATH}:${LD_LIBRARY_PATH}"
 
-# Workaround: IN 1.0.x even though the warning suggests SPARK_LOCAL_DIRS takes precedence only spark.local.dir is actually used
-if [[ $SPARKHPC_SPARK_VERSION =~ ^1\.0\. ]]; then
-  export SPARK_DRIVER_OPTS="$SPARK_DRIVER_OPTS -Dspark.local.dir=${SPARK_LOCAL_DIRS}"
-fi
-
-echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>> SPARK DRIVER ENV:"
 echolog ${LOG_TO_FILE} ">>  SPARK_HOME: ${SPARK_HOME}"
 echolog ${LOG_TO_FILE} ">>  SPARK_SUBMIT_CLASSPATH = ${SPARK_SUBMIT_CLASSPATH}"
 echolog ${LOG_TO_FILE} ">>  SPARK_DRIVER_OPTS: ${SPARK_DRIVER_OPTS}"
 echolog ${LOG_TO_FILE} ">>  SPARK_LOCAL_DIRS: ${SPARK_LOCAL_DIRS}"
 echolog ${LOG_TO_FILE} ">>  SPARK_DRIVER_MEMORY: ${SPARK_DRIVER_MEMORY}"
+echolog ${LOG_TO_FILE} ">>  LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"
 
 if [[ "$RUN_SHELL" == "TRUE" ]]; then
   # Code for running spark driver as an interactive

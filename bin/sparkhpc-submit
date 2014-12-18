@@ -19,7 +19,7 @@ set -e
 export SPARKHPC_JAVA_CLASSPATH=${spark_classpath}
 export SPARKHPC_DRIVER_CLASSPATH=${driver_classpath} 
 export SPARKHPC_EXECUTOR_CLASSPATH=${executor_classpath}
-export LD_LIBRARY_PATH=${spark_library_path}
+export SPARKHPC_JAVA_LIBRARY_PATH=${spark_library_path}
 export SPARKHPC_JAVA_OPTS="${spark_java_opts}"
 export SPARKHPC_DRIVER_OPTS="${driver_java_opts}"
 export SPARKHPC_EXECUTOR_MEM="${executor_mem}G"
