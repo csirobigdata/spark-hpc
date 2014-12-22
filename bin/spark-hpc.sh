@@ -185,7 +185,7 @@ echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 echolog ${LOG_TO_FILE} "DRIVER_URL: ${SPARKHPC_DRIVER_URL}"
 echolog ${LOG_TO_FILE} "Starting executors"
 
-mpirun --pernode ${SPARKHPC_HOME}/cluster/start-executor.sh &
+mpirun --pernode ${SPARKHPC_HOME}/bin/start-executor.sh &
 
 ####################################################
 export SPARK_SUBMIT_CLASSPATH="${SPARKHPC_JAVA_CLASSPATH}:${SPARKHPC_DRIVER_CLASSPATH}"
