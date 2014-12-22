@@ -7,11 +7,6 @@ Reduce](http://databricks.github.io/simr/))
 
 It currently supports Spark 1.x.x and Scala(Java) application runnable with spark-class.
 
-WARNING: THIS IS A FIRST VERSION TESTED WITH SPARK 1.0.x.
-IT APPEARS TO BE WORKING FOR THE MOST PART BUT IT GENERATES A NUMBER OF DEPRECATION 
-WARNINGS AND SOME FEATURES MAY NOW WORK.
-TREAT IT AS WORK IN PROGRESS.
-
 #User guide
 
 There are two ways to use spark-hpc
@@ -21,12 +16,26 @@ There are two ways to use spark-hpc
 
 _Note: On CSIRO cluster you need to load appropriate spark-hpc module before submitting the jobs _ 
 
+## <a name="devcons"></a> Develpment consideration 
+
+Both `sparkhpc-submit` and  `spark-hpc.sh` passe the driver URL to the application
+in the spark.master property of SparkConf, just spark-submit does.
+
+In order to avoid driver disassociation errors in the log and ensure clean 
+termination of your application use `SparkContext.stop()` method to explicitly stop 
+the the driver e.g.:
+
+	val sc = new SparkContext(new SparkConf())
+	// here goes your code
+	sc.stop()  // finish working with the context
 
 ## Using sparkhpc-submit
 
 With `sparkhpc-submit` you can submit spark jobs in a way similar to using `spark-submit`, e.g.:
 
 	sparkhpc-submit --class WordCount -v lib/tests-core_2.10-1.0.jar ./data/lady_of_shalott.txt
+
+(the application jar and data file are available in the `examples` dir of our SPARK HPC installation)
 		
 The job will be submitted with `qsub`, and you can monitor its status with `qstat` e.g.:
 
@@ -59,23 +68,136 @@ Here is the list of important differences between spark-submit and sparkhpc-subm
 
 ## Using spark-hpc.sh
 
+### <a name="config"></a> Runtime Configuration
 
-## <a name="callconv"></a> Develpment consideration 
+When running Spark-HPC, `spark-hpc.sh` honors the following environment variables:
 
-Both `sparkhpc-submit` and  `spark-hpc.sh` passe the driver URL to the application
-in the spark.master property of SparkConf, just spark-submit does.
+* `SPARKHPC_MEM` - the max java heap space
+* `SPARKHPC_DRIVER_MEM` - the java heap space for the driver (defaults to $SPARKHPC_MEM)
+* `SPARKHPC_EXECUTOR_MEM` - the max java heap space for the executor (defaults to $SPARKHPC_MEM)
+* `SPARKHPC_JAVA_CLASSPATH` - 
+* `SPARKHPC_DRIVER_CLASSPATH` - 
+* `SPARKHPC_EXECUTOR_CLASSPATH` - 
+* `SPARKHPC_JAVA_OPTS` - 
+* `SPARKHPC_DRIVER_OPTS` - 
+* `SPARKHPC_EXECUTOR_OPTS` - 
+* `SPARKHPC_JAVA_LIBRARY_PATH` - 
+* `SPARKHPC_DRIVER_LIBRARY_PATH` - 
+* `SPARKHPC_DRIVER_LIBRARY_PATH` - 
 
-In order to avoid driver disassociation errors in the log and ensure clean 
-termination of your application use `SparkContext.stop()` method to explicitly stop 
-the the driver e.g.:
+See *examples/run-wordcout.sh* for a sample script using some of the options above.
 
-	val sc = new SparkContext(new SparkConf())
-	// here goes your code
-	sc.stop()  // finish working with the context
+### Non-interactive Batch Mode
+
+To run in batch mode do the following in your PBS script.
+
+Initialize the runtime environment so that it includes all required dependencies (e.g.: using env modules): openmpi, jre, spark, and spark-hpc
+
+Configure `spark-hpc.sh` through environment variables. See the [Configuration](#config)
+section for more information.
+
+Then call `spark-hpc.sh` as follows:
+
+    spark-hpc.sh <class-name> <args>
+
+Where `<class-name>` contains the Spark driver program to run, and `<args>` are
+the commandline arguments to the driver.
+
+For example for a system with modules (e.g.: CSIRO clusters) a PBS submission script can look like that:
+
+	#!/bin/bash
+	#PBS -N WordCount
+	#PBS -l nodes=1:ppn=1,vmem=2GB
+	#PBS -l walltime=10:00
+	#PBS -j oe
+	#PBS -o output/WordCount.oe
+	#PBS -V
+
+	set -e
+
+	export SPARKHPC_JAVA_CLASSPATH=${SPARKHPC_HOME}/examples/lib/tests-core_2.10-1.0.jar
+	export SPARKHPC_JAVA_OPTS="-Dspark.logInfo=true"
+	export SPARKHPC_EXECUTOR_MEM="1G"
+	export SPARKHPC_DRIVER_MEM="1G"
+
+	${SPARKHPC_HOME}/bin/spark-hpc.sh --verbose WordCount ${SPARKHPC_HOME}/examples/data/lady_of_shalott.txt	
+
+
+### Interactive Mode
+
+Initialize the runtime environment so that it includes all required dependencies (e.g.: using env modules): openmpi, jre, spark, and spark-hpc.
+_Note: On CSIRO cluster you need to load appropriate spark-hpc module to initialize the runtime environment _ 
+
+To run in interactive mode, first start an interactive PBS job:
+
+    qsub -I -V <other pbs options> 
+
+e.g:
+
+    qsub -I -V -N sparkshell -l nodes=2:ppn=2,vmem=4GB,walltime=30:00
+
+Then run Spark-HPC as follows:
+
+    spark-hpc.sh --shell
+
+The Spark interactive REPL will be started within the interactive shell
+session, presenting you with a Scala prompt and pre loaded Spark context.
+
+`spark-hpc.sh --shell` can be configured in the same way as the batch mode version.
+
+## Examples (needs to be reviewed)
+
+Examples are available in the `examples` directory.
+You will need to compile and package the examples before running with maven.
+Please refer to [examples/README.md] for details.
+
+### Non-Interactive Batch Examples
+
+The example scripts in the base `examples` directory run applications in a
+non-interactive batch mode. They include PBS directives for resource allocation
+etc. Available example scripts are:
+
+* run-workcount.sh - word count example (Driver URL passed via commandline)
+* run-workcount-env.sh - word count example (Driver URL passed via environment
+  variable)
+* run-parallel-sleep.sh - parallel sleep example
+* run-jnitest.sh - an example of calling a native function from java (and setting requried Spark options)
+
+Please check your [Setup](#setup) before running the examples. In order to run:
+
+    qsub <example script>
+
+e.g.:
+
+    qsub  run-wordcount.sh
+
+The output is saved in the `output` directory.
+
+*NOTE:* These examples and scripts should also work when run directly from
+the Linux from shell (without qsub)
+
+### Interactive Examples
+
+The `examples/repl` directory contains an example Scala script for
+use in interactive mode. It is run by `:load`ing it at the Scala prompt.
+
+To run the example, first launch `spark-hpc.sh` in interactive mode:
+
+    qsub -I -v SPARKHPC_ROOT -l nodes=2:ppn=2,vmem=2GB,walltime=30:00
+    . ${SPARKHPC_ROOT}/load_spark.sh
+    . ${SPARKHPC_ROOT}/load_sparkhpc.sh`
+    cd ${SPARKHPC_ROOT}/examples/repl
+    spark-hpc.sh --shell
+
+Once you have an interactive session, you can set the `inputPath` variable and
+load the script via:
+
+    val inputPath = "../../../data/lady_of_shalott.txt"
+    :load WordCountREPL.scala
 
 # Admin guide
 
-## <a name="intall"></a> Installation
+## <a name="intall"></a> Installation (needs to be updated)
 
 ### <a name="depend"></a>Dependencies
 
@@ -119,35 +241,6 @@ Models](http://modules.sourceforge.net/).
 Users can specify their own configuration by placing identically named scripts
 into their `~/.spark-hpc/` directory, which contain appropriate shell commands.
 These will automatically be chosen over the defaults if present.
-
-## <a name="config"></a> Runtime Configuration
-
-When running Spark-HPC, `spark-hpc.sh` honors all general and executor specific
-Spark [environment
-variables](http://spark.apache.org/docs/0.9.0/configuration.html#environment-variables)
-and [java system
-properties](http://spark.apache.org/docs/0.9.0/configuration.html#spark-properties),
-used to control Spark job behaviour.
-
-Noteworthy Spark environment variables:
-
-* `SPARK_CLASSPATH` - additional classpath
-* `SPARK_JAVA_OPTS` - jvm options (e.g. -Dxxxx=yyy)
-* `SPARK_LIBRARY_PATH` - path to native java libraries (JAVA_LIBRARY_PATH)
-* `SPARK_MEM` - the max java heap space for both driver and executors (e.g. 2048m)
-
-See *examples/run-jnitest-env.sh* for a sample script using all of the options above.
-
-In addition `spark-hpc.sh` can be configured using the following environment variables:
-
-* `SPARKHPC_LOCAL_DIR` - the location spark executors will use for spill and RDD files
-* `SPARKHPC_DRIVER_MEM` - the java heap space for the driver (defaults to $SPARK_MEM)
-* `SPARKHPC_EXECUTOR_MEM` - the max java heap space for the executor (defaults to $SPARK_MEM)
-
-The following special handling rules apply:
-
-* `spark.local.dir` is checked and handled with respect to admin set site conventions
-* `SPARKHPC_LOCAL_DIR` is synonymous with, and overwritten by, `-Dspark.local.dir`
 
 
 ### <a name="site_conf"></a> Site Wide Runtime Config
@@ -213,123 +306,6 @@ and set `SPARK_JAVA_OPTS` appropriately:
     log4j.logger.org.apache.spark.repl.SparkILoop$SparkILoopInterpreter=INFO
     > export SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS}"\
     > " -Dlog4j.configuration=file:///${SPARKHPC_HOME}/examples/log4j/log4j.properties"
-
-## <a name="usage"></a> Usage
-
-### Non-interactive Batch Mode
-
-To run in batch mode do the following in your PBS script.
-
-If required (see [Dynamic Environment Setup Scripts](#env)), source the
-`load_sparkhpc.sh` and/or `load_spark.sh` scripts *prior* to calling
-`spark-hpc.sh. e.g.:
-
-    #PBS -v SPARKHPC_ROOT
-    . ${SPARKHPC_ROOT}/load_spark.sh
-    . ${SPARKHPC_ROOT}/load_sparkhpc.sh
-
-Then call `spark-hpc.sh` as follows:
-
-    spark-hpc.sh <class-name> <args>
-
-Where `<class-name>` contains the Spark driver program to run, and `<args>` are
-the commandline arguments to the driver.
-
-See the [Driver Calling Convention](#callconv) section for information on
-different approaches to passing the driver URL to the program named in
-`<class-name>`. See `spark-hpc.sh --help` for an extended usage description.
-
-Additional options e.g.: (classpath, jvm options) can be passed to
-`spark-hpc.sh` through environment variables. See the [Configuration](#config)
-section for more information.
-
-### Interactive Mode
-
-To run in interactive mode, first start an interactive PBS job:
-
-    qsub -I -v SPARKHPC_ROOT <other pbs options> 
-
-e.g:
-
-    qsub -I -v SPARKHPC_ROOT -N sparkshell -l nodes=2:ppn=2,vmem=4GB,walltime=30:00
-
-Once the job starts and you have an interactive shell session, source the
-[Dynamic Environment Setup Scripts](#env) if required, e.g.:
-
-    . ${SPARKHPC_ROOT}/load_spark.sh
-    . ${SPARKHPC_ROOT}/load_sparkhpc.sh
-
-Then run Spark-HPC as follows:
-
-    spark-hpc.sh --shell
-
-The Spark interactive REPL will be started within the interactive shell
-session, presenting you with a Scala prompt and pre loaded Spark context.
-
-`spark-hpc.sh --shell` can be configured in the same way as the batch mode version.
-See the [Configuration](#config) section for more information.
-
-### <a name="callconv"></a> Driver Calling Convention
-
-By default `spark-hpc.sh` passes the driver URL to `<class-name>` via its first
-commandline argument, with `<args>` starting from the *second* argument. Use
-the `--url-env-var` option to alternatively pass the driver URL to
-`<class-name>` via environment variable `MASTER`, with `<args>` starting at the
-*first* commandline argument.
-
-Interactive mode *always* passes the driver URL via environment variable.
-i.e. `spark-hpc.sh --shell` is a synonym for `spark-hpc.sh --shell
---url-env-var`.
-
-## Examples
-
-Examples are available in the `examples` directory.
-You will need to compile and package the examples before running with maven.
-Please refer to [examples/README.md] for details.
-
-### Non-Interactive Batch Examples
-
-The example scripts in the base `examples` directory run applications in a
-non-interactive batch mode. They include PBS directives for resource allocation
-etc. Available example scripts are:
-
-* run-workcount.sh - word count example (Driver URL passed via commandline)
-* run-workcount-env.sh - word count example (Driver URL passed via environment
-  variable)
-* run-parallel-sleep.sh - parallel sleep example
-* run-jnitest.sh - an example of calling a native function from java (and setting requried Spark options)
-
-Please check your [Setup](#setup) before running the examples. In order to run:
-
-    qsub <example script>
-
-e.g.:
-
-    qsub  run-wordcount.sh
-
-The output is saved in the `output` directory.
-
-*NOTE:* These examples and scripts should also work when run directly from
-the Linux from shell (without qsub)
-
-### Interactive Examples
-
-The `examples/repl` directory contains an example Scala script for
-use in interactive mode. It is run by `:load`ing it at the Scala prompt.
-
-To run the example, first launch `spark-hpc.sh` in interactive mode:
-
-    qsub -I -v SPARKHPC_ROOT -l nodes=2:ppn=2,vmem=2GB,walltime=30:00
-    . ${SPARKHPC_ROOT}/load_spark.sh
-    . ${SPARKHPC_ROOT}/load_sparkhpc.sh`
-    cd ${SPARKHPC_ROOT}/examples/repl
-    spark-hpc.sh --shell
-
-Once you have an interactive session, you can set the `inputPath` variable and
-load the script via:
-
-    val inputPath = "../../../data/lady_of_shalott.txt"
-    :load WordCountREPL.scala
 
 
 ## Contributions
