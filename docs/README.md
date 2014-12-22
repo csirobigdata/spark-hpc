@@ -1,33 +1,30 @@
-## Overview 
+SPARK HPC USER AND ADMIN GUIDE
+-------------------------------- 
 
 This package runs SPARK applications on a Linux cluster through a PBS batch
 system. It is based on, and uses the back end of, simr ([Spark in Map
 Reduce](http://databricks.github.io/simr/))
 
-It currently supports Spark 1.0.x and Scala(Java) application runnable with spark-class.
+It currently supports Spark 1.x.x and Scala(Java) application runnable with spark-class.
 
 WARNING: THIS IS A FIRST VERSION TESTED WITH SPARK 1.0.x.
 IT APPEARS TO BE WORKING FOR THE MOST PART BUT IT GENERATES A NUMBER OF DEPRECATION 
 WARNINGS AND SOME FEATURES MAY NOW WORK.
 TREAT IT AS WORK IN PROGRESS.
 
+#User guide
+
 There are two ways to use spark-hpc
 
-1. Submit spark jobs with sparkhpc-submit which mimics to large extend the spark-sumit command.
-2. Use spark-hpc.sh direclty in PBS submission scrips. 
+1. Submit spark jobs with sparkhpc-submit which mimics to large extend the spark-submit command.
+2. Use spark-hpc.sh directly in PBS submission scraps. 
 
 
-## Spark integration
+## Using sparkhpc-submit
 
-Spark applications run via `spark-hpc.sh` need to construct a spark context and
-need to accept the driver url either:
 
-1. via their first command line argument
-2. the `MASTER` environment variable
 
-These two usage conventions are mutually exclusive, i.e. use one or the other
-for each Spark application. See [Usage section](#usage) for details on telling
-`spark-hpc.sh` which driver convention you are using.
+# Admin guide
 
 ## <a name="intall"></a> Installation
 
@@ -284,6 +281,20 @@ load the script via:
 
     val inputPath = "../../../data/lady_of_shalott.txt"
     :load WordCountREPL.scala
+
+### <a name="callconv"></a> Develpment consideration 
+
+By `spark-hpc.sh` passes the driver URL to `<class-name>` 
+in the spark.master property of SparkConf, just spark-submit does.
+
+In order to avoid driver disassociation errors in the log and ensure clean 
+termination of your application use `SparkContext.stop()` method to explicitely stop 
+the the driver e.g.:
+
+	val sc = new SparkContext(new SparkConf())
+	// here goes your code
+	sc.stop()  // finish working with the context
+
 
 ## Contributions
 
