@@ -16,7 +16,7 @@ import org.apache.spark.SparkConf
  * 
  */
 
-object JniTestEnv {
+object JniTest {
 
   System.loadLibrary("tests_jni");
 

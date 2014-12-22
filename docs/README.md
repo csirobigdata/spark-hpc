@@ -26,13 +26,13 @@ _Note: On CSIRO cluster you need to load appropriate spark-hpc module before sub
 
 With `sparkhpc-submit` you can submit spark jobs in a way similar to using `spark-submit`, e.g.:
 
-	sparkhpc-submit --class WordCountEnv -v lib/tests-core_2.10-1.0.jar ./data/lady_of_shalott.txt
+	sparkhpc-submit --class WordCount -v lib/tests-core_2.10-1.0.jar ./data/lady_of_shalott.txt
 		
 The job will be submitted with `qsub`, and you can monitor its status with `qstat` e.g.:
 
 	qstat -u bill # for user bill 	
 		
-Once the job has completed the joined PBS output is available in `./WordCountEnv.oe` (this can be customized with `-o or --output` options).
+Once the job has completed the joined PBS output is available in `./WordCount.oe` (this can be customized with `-o or --output` options).
 
 To get more information about available command line options use:
 
@@ -40,7 +40,7 @@ To get more information about available command line options use:
 	
 Here is an example a more advanced use that requests 32 executors each with 2G or RAM with walltime of 2h:
 
-	sparkhpc-submit --class WordCountEnv -v 
+	sparkhpc-submit --class WordCount -v 
 		--num-executors 32  --executor-memory 2 \
 		--walltime 1:00:00	
 		lib/tests-core_2.10-1.0.jar ./data/lady_of_shalott.txt

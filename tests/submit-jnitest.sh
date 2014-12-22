@@ -1,6 +1,6 @@
 #!/bin/bash
 rm -f JniTestSubmited.oe
-../bin/sparkhpc-submit -v --class  JniTestEnv \
+../bin/sparkhpc-submit -v --class  JniTest \
 	--jars jni/target/tests-jni-1.0.jar \
 	--driver-memory 2 \
 	--executor-memory 2 \

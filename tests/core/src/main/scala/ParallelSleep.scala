@@ -3,9 +3,8 @@ import org.apache.spark.SparkContext._
 
 object ParallelSleep { 
     def main(args: Array[String]) {         
-    	val driverUrl = args(0)
-    	val noOfTasks = if (args.length > 1) args(1).toInt else 5
-    	val sc = new SparkContext(driverUrl, "ParallelSleep")
+    	val noOfTasks = if (args.length > 0) args(0).toInt else 5
+        val sc = new SparkContext(new SparkConf())
         val table = sc.parallelize(List.range(0,noOfTasks), noOfTasks) 
         val result = table.map{ i => 
           println("Starting task: " + i)
@@ -15,5 +14,6 @@ object ParallelSleep {
         } 
         .toArray()
         println("Result: " + result.toList)
+        sc.stop()
  } 
 } 
