@@ -17,12 +17,61 @@ TREAT IT AS WORK IN PROGRESS.
 There are two ways to use spark-hpc
 
 1. Submit spark jobs with sparkhpc-submit which mimics to large extend the spark-submit command.
-2. Use spark-hpc.sh directly in PBS submission scraps. 
+2. Use spark-hpc.sh directly in PBS submission scripts. 
+
+_Note: On CSIRO cluster you need to load appropriate spark-hpc module before submitting the jobs _ 
 
 
 ## Using sparkhpc-submit
 
+With `sparkhpc-submit` you can submit spark jobs in a way similar to using `spark-submit`, e.g.:
 
+	sparkhpc-submit --class WordCountEnv -v lib/tests-core_2.10-1.0.jar ./data/lady_of_shalott.txt
+		
+The job will be submitted with `qsub`, and you can monitor its status with `qstat` e.g.:
+
+	qstat -u bill # for user bill 	
+		
+Once the job has completed the joined PBS output is available in `./WordCountEnv.oe` (this can be customized with `-o or --output` options).
+
+To get more information about available command line options use:
+
+	sparkhpc-submit --help
+	
+Here is an example a more advanced use that requests 32 executors each with 2G or RAM with walltime of 2h:
+
+	sparkhpc-submit --class WordCountEnv -v 
+		--num-executors 32  --executor-memory 2 \
+		--walltime 1:00:00	
+		lib/tests-core_2.10-1.0.jar ./data/lady_of_shalott.txt
+	
+Here is the list of important differences between spark-submit and sparkhpc-submit
+
+- the `--driver-memory` and `--executor-memory` take a number in GB rather then the java like mem specification that includes the unit, e.g: `--driver-memory 1` rather then `--driver-memory 1G`
+- all shared paths (that includes application jar, additional jars, other classpath elements and file paths in argument) are assumed to be on a cluster shared posix filesystem. SPARH HPC will converts all the relative paths to the absolute paths on the submission node. Relative paths in application argument, that should be resolved, need to start with either `./` or `../`  
+- executor and driver jvm environment configuration options passed in SparkConf (e.g. spark.executor.extClassPath) are not supported. Executor environment is assumed to be the same as the driver environment  and is configured with the values of `--driver-java-options`, `--driver-class-path` and `driver-library-path`
+
+
+`sparkhpc-submit` supports a few options useful for debugging:
+
+- `--dry-run` :  Print out the pbs submission script but do not submit it to the cluster
+- `-v, --verbose` : Print verbose info
+
+## Using spark-hpc.sh
+
+
+## <a name="callconv"></a> Develpment consideration 
+
+Both `sparkhpc-submit` and  `spark-hpc.sh` passe the driver URL to the application
+in the spark.master property of SparkConf, just spark-submit does.
+
+In order to avoid driver disassociation errors in the log and ensure clean 
+termination of your application use `SparkContext.stop()` method to explicitly stop 
+the the driver e.g.:
+
+	val sc = new SparkContext(new SparkConf())
+	// here goes your code
+	sc.stop()  // finish working with the context
 
 # Admin guide
 
@@ -281,19 +330,6 @@ load the script via:
 
     val inputPath = "../../../data/lady_of_shalott.txt"
     :load WordCountREPL.scala
-
-### <a name="callconv"></a> Develpment consideration 
-
-By `spark-hpc.sh` passes the driver URL to `<class-name>` 
-in the spark.master property of SparkConf, just spark-submit does.
-
-In order to avoid driver disassociation errors in the log and ensure clean 
-termination of your application use `SparkContext.stop()` method to explicitely stop 
-the the driver e.g.:
-
-	val sc = new SparkContext(new SparkConf())
-	// here goes your code
-	sc.stop()  // finish working with the context
 
 
 ## Contributions
