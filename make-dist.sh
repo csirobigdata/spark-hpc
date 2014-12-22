@@ -13,13 +13,12 @@ mkdir -p ${STAGEDIR}
 
 #copy files
 cp -r bin ${STAGEDIR} 
-cp -r cluster ${STAGEDIR}
 cp -r conf ${STAGEDIR}
 cp LICENSE ${STAGEDIR}
 cp docs/README.md ${STAGEDIR}
 
 #compile the examples
-(cd examples/src && ./make_dist.sh)
+(cd examples && ./make_dist.sh)
 
 cp -r examples/ ${STAGEDIR}
 
