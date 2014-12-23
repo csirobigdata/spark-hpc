@@ -117,6 +117,9 @@ fi
 #TODO: This assumes CSIRO modules convesion when the basename is actually the version
 SPARKHPC_SPARK_VERSION=$(basename $SPARK_HOME)
 
+# set current working to the submission dir so that the paths a resolved correclty
+cd ${PBS_O_WORKDIR}
+
 echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 echolog ${LOG_TO_FILE} ">>  PWD: ${PWD}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_SPARK_VERSION: ${SPARKHPC_SPARK_VERSION}"
@@ -179,7 +182,6 @@ export SPARKHPC_OVERRIDE_OPTS="-Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app
 if [[ $SPARKHPC_SPARK_VERSION =~ ^1\.0\. ]]; then
   export SPARKHPC_OVERRIDE_OPTS="${SPARKHPC_OVERRIDE_OPTS} -Dspark.local.dir=${SPARK_LOCAL_DIRS}"
 fi
-
 
 ####################################################
 # Start launching Executors

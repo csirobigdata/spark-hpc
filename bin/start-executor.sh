@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ${PBS_O_WORKDIR}
+
 source ${SPARKHPC_HOME}/bin/spark-hpc-common.sh
 
 echolog ${LOG_TO_FILE} "))))))))))))))))))))))))))))))))))))))))))"
