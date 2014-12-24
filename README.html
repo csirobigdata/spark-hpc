@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="overview">Overview</h2>
+<p>This package runs SPARK applications on a Linux cluster through a PBS batch system. It is based on, and uses the back end of, simr (<a href="http://databricks.github.io/simr/">Spark in Map Reduce</a>)</p>
+<p>It currently supports Spark 1.x and Scala(Java) application runnable with spark-class.</p>
+<h2 id="development">Development</h2>
+<h3 id="setting-up-development-environment">Setting up development environment</h3>
+<p>Source the <code>set-dev-env.sh</code> with the file defining how to setup a specific environment as an argument in the spark-hpc root directory. Sample environment definition files for CSIRO brag cluster are available in the <code>env</code> directory.</p>
+<p>E.g.:</p>
+<pre><code>source set-dev-env.sh env/bragg_1.8_1.1.0</code></pre>
+<p>The purpose of the environment definition files is to load desired version of spark-hpc dependencies including:</p>
+<ul>
+<li>openmpi</li>
+<li>jdk</li>
+<li>spark</li>
+<li>maven3 (for development only)</li>
+</ul>
+<h3 id="testing">Testing</h3>
+<p>Once the dev environment is set you can run the development version of SPARK-HPC with $SPARKHPC_HOME/bin/sparkhpc-submit.</p>
+<p>A few scripts useful for manual testsing are available in the <code>test</code> dir:</p>
+<ul>
+<li>submit-wordcount.sh - a simple word count application testing the basic submission interface</li>
+<li>submit-jnitest.sh - an application testing passing java options, classpath and java library path to both driver and executor.</li>
+</ul>
+<p>Source code for the corresponding application is in the <code>test</code> dir as will and the applications need to be build with <code>mvn install</code> prior to testing.</p>
+<h3 id="building-a-distribution">Building a distribution</h3>
+<p>Use the <code>make-dist.sh</code> script to build the distribution of SPARK HPC, e.g.:</p>
+<pre><code>./make-dist.sh</code></pre>
+<p>The script reads the SPARK HPC version from the VERSION file (e.g. 0.1_spark1.x) and produces the distribution tar.gz file in the <code>target/spark-hpc\_0.1\_&lt;version&gt;.tar.gz</code> file (e.g.: target/spark-hpc_0.1_spark-1.x.tar.gz).</p>
+<p>The distribution includes:</p>
+<ul>
+<li>binaries (scripts) in <code>bin</code> directory</li>
+<li>sample configuration files in <code>conf</code> directory</li>
+<li>examples in <code>examples</code> directory</li>
+<li>and the README.md file from <code>docs</code> directory</li>
+</ul>
+<h2 id="contributions">Contributions</h2>
+<p>Any third party contributions submitted to this software project are to be made under the terms of the BSD 3-Clause License template, a copy is available at: http://opensource.org/licenses/BSD-3-Clause</p>
+<p>Please see the <a href="./browse/LICENSE">LICENSE</a> file in the base directory of this distrubtion for full details.</p>
+</body>
+</html>
