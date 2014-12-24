@@ -15,7 +15,7 @@ mkdir -p ${STAGEDIR}
 cp -r bin ${STAGEDIR} 
 cp -r conf ${STAGEDIR}
 cp LICENSE ${STAGEDIR}
-cp docs/README.md ${STAGEDIR}
+cp docs/*.md ${STAGEDIR}
 
 #compile the examples
 (cd examples && ./make_dist.sh)
