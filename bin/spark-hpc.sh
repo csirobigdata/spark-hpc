@@ -60,17 +60,26 @@ fi
 
 # Save the admin/site version of SPARKHPC_LOCAL_DIR
 # for later checking
-SITE_SPARKHPC_LOCAL_DIR=$SPARKHPC_LOCAL_DIR
+
+#TODO: This is brag specific perhpas use TEMP dir as an exampled instead
+SITE_SPARKHPC_LOCAL_DIR=${SPARKHPC_LOCAL_DIR:-${LOCALDIR}}
+SITE_SPARKHPC_FLUSH_DIR=${SPARKHPC_FLUSH_DIR:-${FLUSHDIR}}
 
 # Load users config
 if [[ -f "${HOME}/.spark-hpc/set-env.sh" ]] ; then
   source ${HOME}/.spark-hpc/set-env.sh
 fi
 
+# Now restore the site config settingg
+# TODO: Add a warning if override user settings
+export SPARKHPC_LOCAL_DIR=${SITE_SPARKHPC_LOCAL_DIR}
+export SPARKHPC_FLUSH_DIR=${SITE_SPARKHPC_FLUSH_DIR}
+
+
 ################################################
 # Command line parsing
 
-OPTS=`getopt -o "+shv" -l "shell,help,verbose,spark-hpc-log:,log4j-configuration:,force-local-dir" -- "$@"`
+OPTS=`getopt -o "+shv" -l "shell,help,verbose,spark-hpc-log:,log4j-configuration:" -- "$@"`
 if [ $? -ne 0 ]; then
   echoerr "$USAGE"
   exit 1
@@ -122,6 +131,8 @@ cd ${PBS_O_WORKDIR}
 
 echolog ${LOG_TO_FILE} ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 echolog ${LOG_TO_FILE} ">>  PWD: ${PWD}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_LOCAL_DIR: ${SPARKHPC_LOCAL_DIR}"
+echolog ${LOG_TO_FILE} ">>  SPARKHPC_FLUSH_DIR: ${SPARKHPC_FLUSH_DIR}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_SPARK_VERSION: ${SPARKHPC_SPARK_VERSION}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_JAVA_OPTS: ${SPARKHPC_JAVA_OPTS}"
 echolog ${LOG_TO_FILE} ">>  SPARKHPC_DRIVER_OPTS: ${SPARKHPC_DRIVER_OPTS}"
@@ -138,23 +149,13 @@ echolog ${LOG_TO_FILE} ">>  SPARKHPC_EXECUTOR_MEM: ${SPARKHPC_EXECUTOR_MEM}"
 ######################################################
 # Start preparing SPARK-HPC working files and env vars
 
-# If a log4j config file was specified and exists
-if [[ -f "$LOG4J_CONF" ]]; then
-    # Append the current working directory path if it
-    # is not already an absolute path
-    if [[ "$LOG4J_CONF" != /* ]]; then
-        LOG4J_CONF="${PWD}/${LOG4J_CONF}"
-    fi
-    SPARK_JAVA_OPTS="${SPARK_JAVA_OPTS} -Dlog4j.configuration=file://${LOG4J_CONF}"
-fi
-
 #JAVA mem
 export SPARKHPC_DRIVER_MEM=${SPARKHPC_DRIVER_MEM:-$SPARKHPC_MEM}
 export SPARKHPC_EXECUTOR_MEM=${SPARKHPC_EXECUTOR_MEM:-$SPARKHPC_MEM}
 
 #Create a global scratch directory for this job, default to FLUSHDIR if
 # appropriate env vars not set
-SPARKHPC_SCRDIR=${SPARKHPC_SCRDIR:-${FLUSHDIR}}/.sparkhpc
+SPARKHPC_SCRDIR=${SPARKHPC_FLUSH_DIR}/.sparkhpc
 if [[ ! -d ${SPARKHPC_SCRDIR} ]]; then
     mkdir ${SPARKHPC_SCRDIR}
 fi
@@ -174,13 +175,22 @@ SPARKHPC_DRIVER_URL="simr://${SPARKHPC_COMM_FILE}"
 
 #Setup shared env for driver and executor
 # Configure SPARK local dir 
-export SPARK_LOCAL_DIRS=${SPARKHPC_LOCAL_DIR:-$LOCALDIR}
-
+export SPARK_LOCAL_DIRS=${SPARKHPC_LOCAL_DIR}
 export SPARKHPC_OVERRIDE_OPTS="-Dspark.master=${SPARKHPC_DRIVER_URL} -Dspark.app.name=${PBS_JOBNAME}"
 
 # Workaround: IN 1.0.x even though the warning suggests SPARK_LOCAL_DIRS takes precedence only spark.local.dir is actually used
 if [[ $SPARKHPC_SPARK_VERSION =~ ^1\.0\. ]]; then
   export SPARKHPC_OVERRIDE_OPTS="${SPARKHPC_OVERRIDE_OPTS} -Dspark.local.dir=${SPARK_LOCAL_DIRS}"
+fi
+
+# If a log4j config file was specified and exists
+if [[ -f "$LOG4J_CONF" ]]; then
+    # Append the current working directory path if it
+    # is not already an absolute path
+    if [[ "$LOG4J_CONF" != /* ]]; then
+        LOG4J_CONF="${PWD}/${LOG4J_CONF}"
+    fi
+    SPARKHPC_OVERRIDE_OPTS="${SPARKHPC_OVERRIDE_OPTS} -Dlog4j.configuration=file://${LOG4J_CONF}"
 fi
 
 ####################################################

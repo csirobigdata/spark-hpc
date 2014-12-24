@@ -3,3 +3,6 @@ module load openmpi
 module load jdk/1.8.0_11
 module load spark/1.1.0
 module load maven/3.1.1
+
+export SPARKHPC_LOCAL_DIR=${LOCALDIR}
+export SPARKHPC_FLUSH_DIR=${FLUSHDIR}
