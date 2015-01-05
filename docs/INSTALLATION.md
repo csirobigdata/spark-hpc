@@ -6,7 +6,7 @@ SPARK-HPC Installation
 Spark-HPC requires the following software and environment variables to be setup
 on the system:
 
-* Spark 1.0.x
+* Spark 1.x
     - `SPARK_HOME` environment variable must be set to the Spark installation
       directory
     - The `bin` directory of the Spark installation must be added to the `PATH`
@@ -15,18 +15,20 @@ on the system:
     - The `mpirun` script/program must be visible via the `PATH`
       ENVironment variable. If your MPI distribution use a different name to
       `mpirun`, please set up an alias or symbolic link named `mpirun`.
+      
+Spark-HPC also requires a JVM to be installed (1.7+)
 
 ### <a name="setup"></a> Setup
 
-1. Copy the Spark-HPC project directory to the desired location.
-2. Set the `SPARKHPC_HOME` and `SPARKHPC_ROOT` environment variables to the
+1. Untar the Spark-HPC distribution bundle to the desired location.
+2. Set the `SPARKHPC_HOME` environment variables to the
    base location used above.
 3. Add `${SPARKHPC_HOME}/bin` to the system `PATH`.
 
 ### <a name="site_conf"></a> Site Wide Runtime Config
 
 Site wide runtime configuration options can be set by system administrators in
-the `set-env.sh` script in the `SPARKHPC_HOME` directory. Please see comments in
+the `set-env.sh` script in the `SPARKHPC_HOME/conf` directory. Please see comments in
 this script for a description of the available environment variables.
 
 Values in this file are overwritten by values in the [User Config](#user_conf)

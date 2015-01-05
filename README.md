@@ -43,7 +43,7 @@ Use the `make-dist.sh` script to build the distribution of SPARK HPC, e.g.:
 
 	./make-dist.sh
 	
-The script reads the SPARK HPC version from the VERSION file (e.g. 0.1\_spark1.x) and produces the distribution tar.gz file in the `target/spark-hpc\_0.1\_<version>.tar.gz` file (e.g.: target/spark-hpc\_0.1\_spark-1.x.tar.gz).
+The script reads the SPARK HPC version from the VERSION file (e.g. 0.1\_spark1.x) and produces the distribution tar.gz file in the `target/spark-hpc_0.1_<version>.tar.gz` file (e.g.: `target/spark-hpc_0.1_spark-1.x.tar.gz`).
 
 The distribution includes:
 
